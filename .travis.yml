@@ -1,6 +1,7 @@
 language: go
 go:
   - 1.8
-script: 
-  - go test -v ./...
-  - ! go fmt 2>&1 | read
+before_script:
+  - go vet ./...
+  - sh .travis.test.sh 
+script: go test -v ./...
