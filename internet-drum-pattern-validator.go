@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"github.com/fatih/color"
 )
 
 type DrumPattern struct {
@@ -40,6 +41,9 @@ const numberOfNotesPerInstrument = numberOfNotesPerBeat * numberOfBeatsPerBar
 const numberOfDataPartsPerNote = 2
 const numberOfDataPartsPerInstrument = numberOfNotesPerInstrument * numberOfDataPartsPerNote
 const numberOfDataPartsPerDrumPattern = numberOfInstruments * numberOfDataPartsPerInstrument
+
+var errorColor = color.New(color.FgRed).SprintFunc()
+var successColor = color.New(color.FgGreen).SprintFunc()
 
 func Decode(pattern string) ([]byte, error) {
 	return base64.StdEncoding.DecodeString(pattern)
@@ -140,18 +144,18 @@ func main() {
 	pattern, decodingError := Decode(os.Args[1])
 
 	if decodingError != nil {
-		fmt.Fprintln(os.Stderr, fmt.Sprintf("Could not decode drum pattern: %s.", decodingError))
+		fmt.Fprintln(os.Stderr, fmt.Sprintf(errorColor("Could not decode drum pattern: %s."), decodingError))
 		os.Exit(1)
 	}
 
 	validationError := ValidatePattern(pattern)
 
 	if validationError != nil {
-		fmt.Fprintln(os.Stderr, validationError)
+		fmt.Fprintln(os.Stderr, fmt.Sprintf(errorColor("The drum pattern is invalid: %s"), validationError))
 		os.Exit(1)
 	}
 
-	fmt.Println("The drum pattern is valid!")
+	fmt.Println(successColor("The drum pattern is valid!"))
 	fmt.Println()
 
 	drumPattern := Convert(pattern)
