@@ -1,6 +1,6 @@
 # Internet Drum Pattern Validator
 
-Validates base-64 encoded Internet Drum Pattern data and, if valid, return a formatted pattern. 
+Validates base-64 encoded [Internet Drum Pattern][1] data and, if valid, return a formatted pattern. 
 
 ## Build status
 
@@ -8,7 +8,7 @@ Validates base-64 encoded Internet Drum Pattern data and, if valid, return a for
 
 ## Requirements
 
-To build the binary for your system, you need a [Go distribution][1].
+To build the binary for your system, you need a [Go distribution][2].
 
 ## Installing
 
@@ -74,4 +74,5 @@ https://github.com/internetofdrums/internet-drum-pattern-spec#readme
 If the pattern is valid, the pattern data is formatted and written to stdout.
 ```
 
-[1]: https://golang.org/doc/install
+[1]: https://github.com/internetofdrums/internet-drum-pattern-spec#readme
+[2]: https://golang.org/doc/install
