@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
-	"os"
+	"bytes"
 	"encoding/base64"
 	"errors"
-	"bytes"
+	"fmt"
+	"os"
 )
 
 type DrumPattern struct {
@@ -30,7 +30,7 @@ following the Internet Drum Pattern Specification, see:
 https://github.com/internetofdrums/internet-drum-pattern-spec#readme
 
 If the pattern is valid, the pattern data is formatted and written to stdout.
-`;
+`
 
 const maximumNoteDataValue = 127
 const numberOfInstruments = 16
@@ -67,8 +67,8 @@ func Convert(pattern []byte) DrumPattern {
 	instruments := make([]Instrument, numberOfInstruments)
 
 	for i := 0; i < numberOfInstruments; i++ {
-		patternDataChunkStartIndex := i * numberOfBytesPerInstrument;
-		patternDataChunkEndIndex := patternDataChunkStartIndex + numberOfBytesPerInstrument;
+		patternDataChunkStartIndex := i * numberOfBytesPerInstrument
+		patternDataChunkEndIndex := patternDataChunkStartIndex + numberOfBytesPerInstrument
 		noteData := pattern[patternDataChunkStartIndex:patternDataChunkEndIndex]
 		notes := make([]Note, numberOfNotesPerInstrument)
 
