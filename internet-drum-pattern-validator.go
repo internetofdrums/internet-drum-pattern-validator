@@ -38,21 +38,27 @@ const numberOfNotesPerBeat = 4
 const numberOfBeatsPerBar = 4
 const numberOfNotesPerInstrument = numberOfNotesPerBeat * numberOfBeatsPerBar
 const numberOfDataPartsPerNote = 2
-const numberOfBytesPerInstrument = numberOfNotesPerInstrument * numberOfDataPartsPerNote
-const numberOfBytesPerDrumPattern = numberOfInstruments * numberOfBytesPerInstrument
+const numberOfDataPartsPerInstrument = numberOfNotesPerInstrument * numberOfDataPartsPerNote
+const numberOfDataPartsPerDrumPattern = numberOfInstruments * numberOfDataPartsPerInstrument
 
 func Decode(pattern string) ([]byte, error) {
 	return base64.StdEncoding.DecodeString(pattern)
 }
 
-func IsValidPattern(pattern []byte) (bool, error) {
-	if len(pattern) != numberOfBytesPerDrumPattern {
-		return false, errors.New("Drum pattern does not contain exactly 512 data parts.")
+func ValidatePattern(pattern []byte) error {
+	numberOfDataParts := len(pattern)
+
+	if numberOfDataParts != numberOfDataPartsPerDrumPattern {
+		return errors.New(fmt.Sprintf(
+			"The drum pattern does contains %d data parts (bytes), but should contain exactly %d bytes.",
+			numberOfDataParts,
+			numberOfDataPartsPerDrumPattern,
+		))
 	}
 
 	for _, dataPart := range pattern {
 		if dataPart < 0 || dataPart > maximumNoteDataValue {
-			return false, errors.New(fmt.Sprintf(
+			return errors.New(fmt.Sprintf(
 				"Encountered data value of 0x%x, which exceeds allowed value of 0x%x.",
 				dataPart,
 				maximumNoteDataValue,
@@ -60,19 +66,19 @@ func IsValidPattern(pattern []byte) (bool, error) {
 		}
 	}
 
-	return true, nil
+	return nil
 }
 
 func Convert(pattern []byte) DrumPattern {
 	instruments := make([]Instrument, numberOfInstruments)
 
 	for i := 0; i < numberOfInstruments; i++ {
-		patternDataChunkStartIndex := i * numberOfBytesPerInstrument
-		patternDataChunkEndIndex := patternDataChunkStartIndex + numberOfBytesPerInstrument
+		patternDataChunkStartIndex := i * numberOfDataPartsPerInstrument
+		patternDataChunkEndIndex := patternDataChunkStartIndex + numberOfDataPartsPerInstrument
 		noteData := pattern[patternDataChunkStartIndex:patternDataChunkEndIndex]
 		notes := make([]Note, numberOfNotesPerInstrument)
 
-		for j := 0; j < numberOfBytesPerInstrument; j += 2 {
+		for j := 0; j < numberOfDataPartsPerInstrument; j += 2 {
 			note := Note{
 				length:   noteData[j],
 				velocity: noteData[j+1],
@@ -88,64 +94,71 @@ func Convert(pattern []byte) DrumPattern {
 }
 
 func GetFormattedPattern(pattern DrumPattern) string {
-	buffer := bytes.NewBufferString("")
+	var buffer bytes.Buffer
 
 	for _, instrument := range pattern.instruments {
-		for index, note := range instrument.notes {
-			buffer.WriteString("[")
-			buffer.WriteString(Format(note.length))
-			buffer.WriteString(",")
-			buffer.WriteString(Format(note.velocity))
-			buffer.WriteString("]")
-
-			if (index+1)%numberOfNotesPerBeat == 0 {
-				buffer.WriteString(" ")
-			}
-		}
-
-		buffer.WriteString(fmt.Sprintln())
+		AppendFormattedInstrument(instrument, &buffer)
 	}
 
 	return buffer.String()
 }
 
-func Format(value byte) string {
+func AppendFormattedInstrument(instrument Instrument, buffer *bytes.Buffer) {
+	for index, note := range instrument.notes {
+		AppendFormattedNote(note, buffer)
+
+		if (index+1)%numberOfNotesPerBeat == 0 {
+			buffer.WriteString(" ")
+		}
+	}
+
+	buffer.WriteString(fmt.Sprintln())
+}
+
+func AppendFormattedNote(note Note, buffer *bytes.Buffer) {
+	buffer.WriteString("(")
+	AppendFormattedNoteDataPart(note.length, buffer)
+	buffer.WriteString(",")
+	AppendFormattedNoteDataPart(note.velocity, buffer)
+	buffer.WriteString(")")
+}
+
+func AppendFormattedNoteDataPart(value byte, buffer *bytes.Buffer) {
 	if value == 0x00 {
-		return "00"
+		buffer.WriteString("00")
 	} else {
-		return fmt.Sprintf("%X", value)
+		buffer.WriteString(fmt.Sprintf("%X", value))
 	}
 }
 
 func main() {
-	args := os.Args
-
-	if len(args) != 2 {
+	if len(os.Args) != 2 {
 		fmt.Fprint(os.Stderr, instructions)
 		os.Exit(1)
 	}
 
-	encodedPattern := os.Args[1]
-	pattern, decodingError := Decode(encodedPattern)
+	pattern, decodingError := Decode(os.Args[1])
 
 	if decodingError != nil {
-		fmt.Fprintln(os.Stderr, "An error occured while decoding the pattern.")
+		fmt.Fprintln(os.Stderr, fmt.Sprintf("Could not decode drum pattern: %s.", decodingError))
+		os.Exit(1)
 	}
 
-	result, validationError := IsValidPattern(pattern)
+	validationError := ValidatePattern(pattern)
 
 	if validationError != nil {
 		fmt.Fprintln(os.Stderr, validationError)
 		os.Exit(1)
 	}
 
-	if result != true {
-		fmt.Fprintln(os.Stderr, "The pattern is not valid.")
-		os.Exit(1)
-	}
+	fmt.Println("The drum pattern is valid!")
+	fmt.Println()
 
 	drumPattern := Convert(pattern)
 	formattedPattern := GetFormattedPattern(drumPattern)
 
+	fmt.Println("After decoding, the pattern looks like this, " +
+		"where (XX,YY) is one note with a length of XX and a velocity of YY:")
+	fmt.Println()
 	fmt.Print(formattedPattern)
 }
