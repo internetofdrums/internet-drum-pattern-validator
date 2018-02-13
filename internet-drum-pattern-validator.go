@@ -5,8 +5,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"os"
 	"github.com/fatih/color"
+	"os"
 )
 
 type DrumPattern struct {
@@ -46,7 +46,13 @@ var errorColor = color.New(color.FgRed).SprintFunc()
 var successColor = color.New(color.FgGreen).SprintFunc()
 
 func Decode(pattern string) ([]byte, error) {
-	return base64.StdEncoding.DecodeString(pattern)
+	result, err := base64.StdEncoding.DecodeString(pattern)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func ValidatePattern(pattern []byte) error {
