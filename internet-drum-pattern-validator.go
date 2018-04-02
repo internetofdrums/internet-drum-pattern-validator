@@ -33,7 +33,7 @@ If the pattern is valid, the pattern data is formatted and written to stdout.
 `
 
 const maximumNoteDataValue = 127
-const numberOfInstruments = 16
+const numberOfInstruments = 12
 const numberOfNotesPerBeat = 4
 const numberOfBeatsPerBar = 4
 const numberOfNotesPerInstrument = numberOfNotesPerBeat * numberOfBeatsPerBar
@@ -57,7 +57,7 @@ func ValidatePattern(pattern []byte) error {
 
 	if numberOfDataParts != numberOfDataPartsPerDrumPattern {
 		return errors.New(fmt.Sprintf(
-			"The drum pattern does contains %d data parts (bytes), but should contain exactly %d bytes.",
+			"The drum pattern contains %d data parts (bytes), but should contain exactly %d bytes.",
 			numberOfDataParts,
 			numberOfDataPartsPerDrumPattern,
 		))
