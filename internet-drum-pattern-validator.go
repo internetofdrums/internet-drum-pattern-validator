@@ -85,7 +85,7 @@ func Convert(pattern []byte) DrumPattern {
 		noteData := pattern[patternDataChunkStartIndex:patternDataChunkEndIndex]
 		notes := make([]Note, numberOfNotesPerInstrument)
 
-		for j := 0; j < numberOfNotesPerInstrument; j ++ {
+		for j := 0; j < numberOfNotesPerInstrument; j++ {
 			note := Note{
 				velocity: noteData[j],
 			}
