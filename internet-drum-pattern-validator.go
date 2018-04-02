@@ -18,7 +18,6 @@ type Instrument struct {
 }
 
 type Note struct {
-	length   byte
 	velocity byte
 }
 
@@ -38,9 +37,7 @@ const numberOfInstruments = 16
 const numberOfNotesPerBeat = 4
 const numberOfBeatsPerBar = 4
 const numberOfNotesPerInstrument = numberOfNotesPerBeat * numberOfBeatsPerBar
-const numberOfDataPartsPerNote = 2
-const numberOfDataPartsPerInstrument = numberOfNotesPerInstrument * numberOfDataPartsPerNote
-const numberOfDataPartsPerDrumPattern = numberOfInstruments * numberOfDataPartsPerInstrument
+const numberOfDataPartsPerDrumPattern = numberOfInstruments * numberOfNotesPerInstrument
 
 var errorColor = color.New(color.FgRed).SprintFunc()
 var successColor = color.New(color.FgGreen).SprintFunc()
@@ -83,18 +80,17 @@ func Convert(pattern []byte) DrumPattern {
 	instruments := make([]Instrument, numberOfInstruments)
 
 	for i := 0; i < numberOfInstruments; i++ {
-		patternDataChunkStartIndex := i * numberOfDataPartsPerInstrument
-		patternDataChunkEndIndex := patternDataChunkStartIndex + numberOfDataPartsPerInstrument
+		patternDataChunkStartIndex := i * numberOfNotesPerInstrument
+		patternDataChunkEndIndex := patternDataChunkStartIndex + numberOfNotesPerInstrument
 		noteData := pattern[patternDataChunkStartIndex:patternDataChunkEndIndex]
 		notes := make([]Note, numberOfNotesPerInstrument)
 
-		for j := 0; j < numberOfDataPartsPerInstrument; j += 2 {
+		for j := 0; j < numberOfNotesPerInstrument; j ++ {
 			note := Note{
-				length:   noteData[j],
-				velocity: noteData[j+1],
+				velocity: noteData[j],
 			}
 
-			notes[j/2] = note
+			notes[j] = note
 		}
 
 		instruments[i] = Instrument{notes}
@@ -126,18 +122,15 @@ func AppendFormattedInstrument(instrument Instrument, buffer *bytes.Buffer) {
 }
 
 func AppendFormattedNote(note Note, buffer *bytes.Buffer) {
-	buffer.WriteString("(")
-	AppendFormattedNoteDataPart(note.length, buffer)
-	buffer.WriteString(",")
 	AppendFormattedNoteDataPart(note.velocity, buffer)
-	buffer.WriteString(")")
+	buffer.WriteString(" ")
 }
 
 func AppendFormattedNoteDataPart(value byte, buffer *bytes.Buffer) {
 	if value == 0x00 {
-		buffer.WriteString("00")
+		buffer.WriteString("0x00")
 	} else {
-		buffer.WriteString(fmt.Sprintf("%X", value))
+		buffer.WriteString(fmt.Sprintf("0x%X", value))
 	}
 }
 
@@ -168,7 +161,7 @@ func main() {
 	formattedPattern := GetFormattedPattern(drumPattern)
 
 	fmt.Println("After decoding, the pattern looks like this, " +
-		"where (XX,YY) is one note with a length of XX and a velocity of YY:")
+		"where 0xXX is one note with a velocity of XX:")
 	fmt.Println()
 	fmt.Print(formattedPattern)
 }
